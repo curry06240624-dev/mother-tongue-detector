@@ -11,7 +11,7 @@ A small AI model that reads a sentence written in Chinese characters and answers
 
 **Who it's for:** a volunteer at a help desk in Hsinchu who receives written messages and has to pass each one to someone who reads that language. A second user is the builder of a read-aloud tool, who must pick the right voice before reading a sentence out. Both need this tool at the same moment: when new text arrives.
 
-Try it: the notebook's last section opens the app in Colab, or run `python app.py`. The demo video is linked on the submission form.
+**Try it:** [open the notebook in Colab](https://colab.research.google.com/github/curry06240624-dev/mother-tongue-detector/blob/main/mother_tongue_detector.ipynb) and choose Runtime → Run all; the last section opens the app. Or, after running the notebook, run `python app.py`.
 
 ## What we added
 We started from suggested project **4.4.1 Language identification** and added:
