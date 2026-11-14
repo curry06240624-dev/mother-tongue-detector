@@ -1,0 +1,7 @@
+test set,sentences,3-language model,4-language model
+"MOE test, all lengths",9141,0.8571272289683842,0.8530795317798928
+"MOE test, 4+ characters",7159,0.9452437491269731,0.9439865903059087
+"Tatoeba Mandarin, 4+ characters",2198,0.9344858962693358,0.9772520473157416
+"Tatoeba Taiwanese Hokkien, 4+ characters",125,0.92,0.896
+"Tatoeba Hakka, 4+ characters",61,0.639344262295082,0.3770491803278688
+"Tatoeba Cantonese, 4+ characters",2460,0.0,0.9707317073170731
