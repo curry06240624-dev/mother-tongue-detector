@@ -13,7 +13,7 @@ The demo is a web page that runs the model **inside the browser**, so nothing an
 
 **Who it's for:** a volunteer at a help desk in Hsinchu who receives written messages and has to pass each one to someone who reads that language. A second user is the builder of a read-aloud tool, who must pick the right voice before reading a sentence out. Both need this tool at the same moment: when new text arrives.
 
-**Try it:** run `python app.py` to open the web demo on your computer. To retrain everything, [open the notebook in Colab](https://colab.research.google.com/github/curry06240624-dev/mother-tongue-detector/blob/main/mother_tongue_detector.ipynb) and choose Runtime → Run all.
+**Try it: [live demo](https://curry06240624-dev.github.io/mother-tongue-detector/)** (runs in your browser). Or run `python app.py` to open it on your computer. To retrain everything, [open the notebook in Colab](https://colab.research.google.com/github/curry06240624-dev/mother-tongue-detector/blob/main/mother_tongue_detector.ipynb) and choose Runtime → Run all.
 
 ## What we added
 We started from suggested project **4.4.1 Language identification** and added:
