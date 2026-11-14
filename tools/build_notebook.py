@@ -493,6 +493,8 @@ In Colab this opens a small app. Type or paste a sentence and the tool shows its
 characters pushed it towards that language.
 ''')
 code(r'''
+import warnings
+warnings.filterwarnings("ignore", message="IProgress not found")   # harmless progress-bar warning from gradio
 import gradio as gr
 
 def char_evidence(m, text, lang):
