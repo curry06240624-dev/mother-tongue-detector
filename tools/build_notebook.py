@@ -18,9 +18,10 @@ md(r'''
 **Track:** AI + Languages
 
 Taiwan has three big Chinese languages: **Mandarin** (華語), **Taiwanese Hokkien** (台語) and **Hakka** (客語).
-All three are written with the same Chinese characters, so a popular open-source detector (`langdetect`)
-calls almost every Hokkien and Hakka sentence **Korean**. Every language tool (read-aloud, translation, search,
-spell-check) starts by asking "what language is this?", so these languages get the wrong tool from step one.
+All three are written with the same Chinese characters. A popular open-source detector (`langdetect`) calls about
+half of our Hokkien and Hakka sentences **Korean** and most of the rest plain "Chinese". It even calls half of the
+Mandarin sentences Korean. Every language tool (read-aloud, translation, search, spell-check) starts by asking "what
+language is this?", so these languages get the wrong tool from step one.
 
 This notebook builds a small, explainable model that answers that question, tests it fairly against simple
 baselines, and shows where it fails.
@@ -61,7 +62,7 @@ translation**, so the model sees the *same meaning* in two languages. That stops
 |---|---|---|
 | [MOE Dictionary of Frequently-Used Taiwanese Hokkien](https://twblg.dict.edu.tw) (via [g0v/moedict-data-twblg](https://github.com/g0v/moedict-data-twblg)) | example sentences + Mandarin translations | CC BY-ND 3.0 TW |
 | [MOE Dictionary of Frequently-Used Taiwan Hakka](https://hakkadict.moe.edu.tw) (via [g0v/moedict-data-hakka](https://github.com/g0v/moedict-data-hakka)) | example sentences + Mandarin translations | CC BY-ND 3.0 TW |
-| [Tatoeba](https://tatoeba.org/en/downloads) | sentences written by volunteers, used only as an **outside test** (Mandarin, Hokkien, Hakka) and for Cantonese | CC BY 2.0 FR |
+| [Tatoeba](https://tatoeba.org/en/downloads) | sentences written by volunteers: an **outside test** (sections 6–7), then Cantonese and extra Mandarin for the improved model (section 9) | CC BY 2.0 FR |
 
 We download the files at run time and don't redistribute them.
 ''')

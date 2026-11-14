@@ -5,3 +5,4 @@ __pycache__/
 scratch_*.py
 *.log
 video/work/
+video/*.mp4
