@@ -4,14 +4,16 @@
 **Team:** Yu-Rui Huang
 
 ## The problem
-In Hsinchu County, where nearly 7 in 10 people are Hakka, you hear Mandarin, Hakka (客語) and Taiwanese Hokkien (台語) every day. Hakka and Hokkien are national languages of Taiwan and are taught in schools, and all three languages are written with the same Chinese characters. Software can't tell them apart. The popular open-source detector `langdetect` labels 44–49% of our Hokkien and Hakka test sentences as **Korean**, and most of the rest as plain "Chinese". It even calls 49% of the Mandarin sentences Korean. Every language tool (reading text aloud, translating it, passing a message to the right helper) starts by asking "which language is this?", so Hokkien and Hakka text gets the wrong tool from the first step.
+In Hsinchu County, where nearly 7 in 10 people are Hakka, you hear Mandarin, Hakka (客語) and Taiwanese Hokkien (台語) every day. Hakka and Hokkien are national languages of Taiwan and are taught in schools, and all three languages are written with the same Chinese characters. Software can't tell them apart. The popular open-source detector `langdetect` labels 44–49% of our Hokkien and Hakka test sentences as **Korean**, and most of the rest as plain "Chinese". It even calls 49% of the Mandarin sentences Korean. Even the biggest translators struggle. When we pasted one of our Hokkien test sentences (阮先生娘生做真媠, "Our teacher's wife is very pretty") into Google Translate on 14 Nov 2026, it said "Chinese (Simplified)" and translated it as "Mr. Ruan's mother was truly a woman". DeepL called it Cantonese. Every language tool (reading text aloud, translating it, passing a message to the right helper) starts by asking "which language is this?", so Hokkien and Hakka text gets the wrong tool from the first step.
 
 ## What we built
 A small AI model that reads a sentence written in Chinese characters and answers **Mandarin, Taiwanese Hokkien, Hakka or Cantonese**. It shows how sure it is and which characters decided it. If the text is under 4 characters or the model isn't confident, it says "too short" or "not sure" instead of guessing.
 
+The demo is a web page that runs the model **inside the browser**, so nothing anyone types is sent anywhere. It gives the same answer as the Python model on all 2,931 sentences we checked.
+
 **Who it's for:** a volunteer at a help desk in Hsinchu who receives written messages and has to pass each one to someone who reads that language. A second user is the builder of a read-aloud tool, who must pick the right voice before reading a sentence out. Both need this tool at the same moment: when new text arrives.
 
-**Try it:** [open the notebook in Colab](https://colab.research.google.com/github/curry06240624-dev/mother-tongue-detector/blob/main/mother_tongue_detector.ipynb) and choose Runtime → Run all; the last section opens the app. Or, after running the notebook, run `python app.py`.
+**Try it:** run `python app.py` to open the web demo on your computer. To retrain everything, [open the notebook in Colab](https://colab.research.google.com/github/curry06240624-dev/mother-tongue-detector/blob/main/mother_tongue_detector.ipynb) and choose Runtime → Run all.
 
 ## What we added
 We started from suggested project **4.4.1 Language identification** and added:
@@ -65,7 +67,8 @@ Numbers come from our run on 14 Nov 2026. Tatoeba is updated weekly, so a re-run
   - [MOE Dictionary of Frequently-Used Taiwanese Hokkien](https://twblg.dict.edu.tw) and [MOE Dictionary of Frequently-Used Taiwan Hakka](https://hakkadict.moe.edu.tw). Both © Ministry of Education, CC BY-ND 3.0 TW, read through [g0v/moedict-data-twblg](https://github.com/g0v/moedict-data-twblg) and [g0v/moedict-data-hakka](https://github.com/g0v/moedict-data-hakka).
   - [Tatoeba](https://tatoeba.org/en/downloads), CC BY 2.0 FR.
   - The notebook downloads all data at run time; none of it is stored in this repository.
-- **Libraries:** [scikit-learn](https://scikit-learn.org), [pandas](https://pandas.pydata.org), [NumPy](https://numpy.org), [OpenCC](https://github.com/BYVoid/OpenCC), [langdetect](https://pypi.org/project/langdetect/), [Gradio](https://www.gradio.app), [matplotlib](https://matplotlib.org).
+- **Libraries and fonts:** [scikit-learn](https://scikit-learn.org), [pandas](https://pandas.pydata.org), [NumPy](https://numpy.org), [OpenCC](https://github.com/BYVoid/OpenCC), [langdetect](https://pypi.org/project/langdetect/), [matplotlib](https://matplotlib.org), [Noto Sans TC](https://fonts.google.com/noto/specimen/Noto+Sans+TC).
+- **Design:** the web page's layout follows the [Papago](https://papago.naver.com) translator, one of the three most-visited translation sites. We wrote our own code and used no Papago assets.
 - **Tutorial:** Veritas AI Hackathon 2026 Project Briefs, project 4.4.1.
 - **Background:**
   - [Ministry of Culture: national languages](https://www.moc.gov.tw/en/cp.aspx?n=412)
@@ -73,11 +76,11 @@ Numbers come from our run on 14 Nov 2026. Tatoeba is updated weekly, so a re-run
   - [Hsinchu County Hakka population](https://n.yam.com/Article/20240327424880)
 - **AI tools:** [Claude Code](https://claude.com/claude-code) (Anthropic, model Claude Opus 5.5) did the following:
   - found the datasets;
-  - wrote the notebook and the demo app;
+  - wrote the notebook and the web demo;
   - ran the experiments;
   - drafted this write-up and the video script.
 
-  The video narration is an AI voice (Microsoft Edge text-to-speech).
+  [Higgsfield](https://higgsfield.ai) (GPT Image 2.6) drew three UI mockups, and we built the one we picked. The video narration is an AI voice (Microsoft Edge text-to-speech).
 
 ---
 
@@ -85,7 +88,9 @@ Numbers come from our run on 14 Nov 2026. Tatoeba is updated weekly, so a re-run
 | File | What it is |
 |---|---|
 | `mother_tongue_detector.ipynb` | The whole project, saved with its outputs. In Colab: Runtime → Run all (about 5 minutes) |
-| `app.py` | The demo app (run the notebook first; it saves the model) |
+| `docs/` | The web demo. `mtd.js` runs the model, `model.json` is the trained model (character statistics only, no dictionary text), `app.js` is the page |
+| `app.py` | Opens the web demo on your computer |
 | `results/` | The charts and score tables from the notebook |
 | `tools/build_notebook.py` | The script that writes and runs the notebook |
+| `video/make_video.py` | The script that records the demo video |
 | `requirements.txt` | Python packages |

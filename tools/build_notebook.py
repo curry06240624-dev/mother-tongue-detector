@@ -33,7 +33,7 @@ md(r'''
 ## 1. Setup
 ''')
 code(r'''
-%pip install -q opencc langdetect gradio
+%pip install -q opencc langdetect
 ''')
 code(r'''
 import bz2, csv, hashlib, json, os, re, sys, time, unicodedata, urllib.request
@@ -45,7 +45,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix, classification_report
 import opencc
-from langdetect import detect, DetectorFactory, LangDetectException
+from langdetect import detect, detect_langs, DetectorFactory, LangDetectException
 
 DetectorFactory.seed = 0          # makes langdetect give the same answer every run
 pd.set_option("display.max_colwidth", 70)
@@ -95,8 +95,8 @@ md(r'''
 * Drop sentences with characters that have no standard code (the dictionaries show them as `□` or private-use symbols).
 ''')
 code(r'''
-HAN = re.compile(r"[㐀-䶿一-鿿豈-﫿\U00020000-\U0003134F]")   # Chinese characters
-BAD = re.compile(r"[-\U000F0000-\U0010FFFF□]")                         # private-use symbols and the box
+HAN = re.compile(r"[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0003134F]")   # Chinese characters
+BAD = re.compile(r"[\uE000-\uF8FF\U000F0000-\U0010FFFF\u25A1]")                         # private-use symbols and the box
 
 def clean(text):
     """Keep only the Chinese characters of a sentence."""
@@ -109,7 +109,7 @@ with open(f"{RAW}/twblg_examples.csv", encoding="utf-8") as f:
         rows.append((r["例句"], "Taiwanese Hokkien", "MOE Hokkien dictionary", group))
         rows.append((r["華語翻譯"], "Mandarin", "MOE Hokkien dictionary", group))
 
-PAIR = re.compile("￹([^￹￻]*)￻([^￹]*)")    # the Hakka file stores "￹Hakka sentence￻Mandarin translation"
+PAIR = re.compile("\ufff9([^\ufff9\uFFFB]*)\uFFFB([^\ufff9]*)")    # the Hakka file stores "\ufff9Hakka sentence\uFFFBMandarin translation"
 for entry in json.load(open(f"{RAW}/dict-hakka.json", encoding="utf-8")):
     group = "hakka-dict/" + entry["title"]
     for h in entry.get("heteronyms", []):
@@ -489,81 +489,84 @@ plt.tight_layout(); plt.savefig("results/confusion_outside_4lang.png", dpi=150);
 
 md(r'''
 ## 10. Try it
-In Colab this opens a small app. Type or paste a sentence and the tool shows its guess, how sure it is, and which
-characters pushed it towards that language.
+The web demo (folder `docs/`) runs this same model in the browser. Here is the same check in Python. The pairs are real
+test sentences: a dictionary example and its Mandarin translation, so the meaning is the same.
 ''')
 code(r'''
-import warnings
-warnings.filterwarnings("ignore", message="IProgress not found")   # harmless progress-bar warning from gradio
-import gradio as gr
-
-def char_evidence(m, text, lang):
-    """How much each character pushed model `m` towards `lang` (positive) or away from it (negative)."""
-    v, c = m.named_steps["tfidfvectorizer"], m.named_steps["logisticregression"]
-    k = list(c.classes_).index(lang)
-    x = v.transform([text])
-    lo, hi = v.ngram_range
-    grams = [(i, n, text[i:i + n]) for n in range(lo, hi + 1) for i in range(len(text) - n + 1)]
-    counts = Counter(g for _, _, g in grams)
-    score = np.zeros(len(text))
-    for i, n, g in grams:
-        j = v.vocabulary_.get(g)
-        if j is not None:
-            weight = c.coef_[k, j] - c.coef_[:, j].mean()
-            score[i:i + n] += x[0, j] * weight / counts[g] / n
-    return score
-
-def detect_language(sentence):
+def detect(sentence):
     text = clean(sentence)
     if len(text) < MIN_CHARS:
-        return {}, [], f"**Too short to tell.** Type at least {MIN_CHARS} Chinese characters."
+        return "too short to tell"
     p = model4.predict_proba([text])[0]
-    probs = {lang: float(p[i]) for i, lang in enumerate(classes4)}
-    lang = classes4[int(p.argmax())]
-    ev = char_evidence(model4, text, lang)
-    scale = max(abs(ev).max(), 1e-9)
-    highlighted = [(ch, float(v / scale)) for ch, v in zip(text, ev)]
-    if p.max() < THRESHOLD4:
-        verdict = f"**Not sure** (best guess: {lang}, {p.max():.0%}). It may be another language or a mix. Ask a person."
-    else:
-        verdict = f"**{lang}** ({p.max():.0%} sure)"
-    return probs, highlighted, verdict
+    k = int(p.argmax())
+    answer = classes4[k] if p[k] >= THRESHOLD4 else f"not sure (best guess: {classes4[k]})"
+    return f"{answer}, {p[k]:.0%}"
 
-# Same meaning, different language: real pairs from the TEST set (each pair is one dictionary example + its translation)
+# Same meaning, different language: real pairs from the TEST set (one dictionary example + its translation)
 mt = moe_test.assign(pred=model4.predict(moe_test.text), confidence=model4.predict_proba(moe_test.text).max(1))
 good = mt.groupby("group").filter(lambda d: len(d) == 2 and d.text.str.len().between(8, 18).all()
                                   and (d.pred == d.language).all() and (d.confidence > 0.9).all())
-pair_groups = (good[good.language != "Mandarin"].groupby("language").group.apply(lambda s: list(s.sample(3, random_state=2))))
+pair_groups = good[good.language != "Mandarin"].groupby("language").group.apply(lambda s: list(s.sample(3, random_state=2)))
 for lang, groups in pair_groups.items():
     print(f"--- {lang} + its Mandarin translation")
     for g in groups:
         print("   ", " | ".join(f"{r.sentence} ({r.pred}, {r.confidence:.0%})" for r in good[good.group == g].itertuples()))
 
-canto = both[(both.language == "Cantonese") & (both.split == "test") & both.text.str.len().between(8, 18)]
-examples = [s for g in [pair_groups["Taiwanese Hokkien"][0], pair_groups["Hakka"][0]] for s in good[good.group == g].sentence]
-examples += list(canto.sample(1, random_state=4).sentence)
-print("\ndemo examples:", examples)
-demo = gr.Interface(
-    fn=detect_language,
-    inputs=gr.Textbox(label="Sentence", placeholder="Paste a sentence in Mandarin, Taiwanese Hokkien, Hakka or Cantonese"),
-    outputs=[gr.Label(label="How likely each language is"),
-             gr.HighlightedText(label="Characters that pushed the model towards its answer"),
-             gr.Markdown()],
-    examples=[[s] for s in examples],
-    title="Mother-Tongue Detector",
-    flagging_mode="never")
-
-if "google.colab" in sys.modules:
-    demo.launch()
+print()
+for s in ["我喺屋企同屋企人一齊嗰陣最開心。", "食飽未？", "阿薩米唔聽涯。"]:
+    print(f"{s}  ->  {detect(s)}")
 ''')
 
 md(r'''
-## 11. Save the model
+## 11. Save the model and export it for the web demo
+The web page repeats scikit-learn's maths in JavaScript (`docs/mtd.js`). For each language we store its weights minus
+the average weight across languages. Softmax gives the same probabilities, and these "relative weights" are also what
+the page's "why this answer" colours show. We checked that the page gives the same answer as this notebook on 2,931
+sentences (largest probability difference: 0.000003).
+
+The example buttons on the page are real sentences the model never saw. For two of them we also note what other tools
+said when we tried them by hand on 14 Nov 2026 (single examples, not a systematic test).
 ''')
 code(r'''
 import joblib
 joblib.dump({"model": model4, "threshold": THRESHOLD4, "min_chars": MIN_CHARS}, "models/mother_tongue_detector.joblib")
-print("saved models/mother_tongue_detector.joblib")
+
+WEB_EXAMPLES = [
+    {"text": "阮先生娘生做真媠。", "truth": "Taiwanese Hokkien", "meaning": "Our teacher's wife is very pretty.",
+     "others": {"Google Translate": "Chinese (Simplified)", "DeepL": "Cantonese"}},
+    {"text": "我們的師母長得很美。", "truth": "Mandarin", "meaning": "Our teacher's wife is very pretty."},
+    {"text": "冷風對窗門个縫仔項鑽入來。", "truth": "Hakka", "meaning": "Cold wind blew in through the gap in the window.",
+     "others": {"Google Translate": "Chinese (Traditional)"}},
+    {"text": "寒風從窗戶的縫隙中鑽了進來。", "truth": "Mandarin", "meaning": "Cold wind blew in through the gap in the window."},
+    {"text": "我喺屋企同屋企人一齊嗰陣最開心。", "truth": "Cantonese", "meaning": "I'm happiest at home with my family."},
+    {"text": "阿薩米唔聽涯。", "truth": "Hakka", "meaning": "Assami doesn't listen to me. (Hakka in non-standard spelling)"},
+]
+LANGDETECT_NAMES = {"ko": "Korean", "zh-tw": "Chinese", "zh-cn": "Chinese", "ja": "Japanese", "vi": "Vietnamese"}
+
+def langdetect_answer(sentence):
+    try:
+        best = detect_langs(sentence)[0]
+        return f"{LANGDETECT_NAMES.get(best.lang, best.lang)} ({best.prob:.0%})"
+    except LangDetectException:
+        return "no answer"
+
+vec4, clf4 = model4.named_steps["tfidfvectorizer"], model4.named_steps["logisticregression"]
+web = {
+    "classes": list(clf4.classes_),
+    "ngram_range": list(vec4.ngram_range),
+    "min_chars": MIN_CHARS,
+    "threshold": round(THRESHOLD4, 4),
+    "intercept": [round(float(b), 6) for b in clf4.intercept_],
+    "vocab": chr(1).join(sorted(vec4.vocabulary_, key=vec4.vocabulary_.get)),   # n-grams in feature order
+    "idf": [round(float(x), 5) for x in vec4.idf_],
+    "weights": [[round(float(x), 5) for x in row] for row in clf4.coef_ - clf4.coef_.mean(0)],
+    "examples": [dict(e, langdetect=langdetect_answer(e["text"])) for e in WEB_EXAMPLES],
+}
+os.makedirs("docs", exist_ok=True)
+with open("docs/model.json", "w", encoding="utf-8") as f:
+    json.dump(web, f, ensure_ascii=False, separators=(",", ":"))
+print(f"saved models/mother_tongue_detector.joblib and docs/model.json ({os.path.getsize('docs/model.json') / 1e6:.1f} MB, "
+      f"{len(web['idf']):,} features)")
 ''')
 
 nb = new_notebook(cells=CELLS)

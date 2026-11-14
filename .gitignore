@@ -2,7 +2,7 @@ data/
 models/
 __pycache__/
 .ipynb_checkpoints/
-scratch_*.py
+scratch_*
 *.log
 video/work/
 video/*.mp4

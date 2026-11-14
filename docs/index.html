@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mother-Tongue Detector</title>
+  <meta name="description" content="Tells Taiwanese Hokkien, Hakka, Mandarin and Cantonese apart. Runs in your browser.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%2303c75a'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="dot" aria-hidden="true"></span>Mother-Tongue Detector</div>
+    <nav class="links">
+      <a href="https://github.com/curry06240624-dev/mother-tongue-detector#readme">How it works</a>
+      <a href="https://github.com/curry06240624-dev/mother-tongue-detector">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panels">
+      <div class="card">
+        <div class="card-head"><span class="pill">Detect language</span></div>
+        <div class="input-wrap">
+          <textarea id="input" maxlength="500" placeholder="Type or paste a sentence in Chinese characters" spellcheck="false"></textarea>
+          <button id="clear" class="clear" type="button" aria-label="Clear text" hidden>&times;</button>
+        </div>
+        <div class="card-foot">
+          <span id="count" class="count">0 / 500</span>
+          <button id="detect" class="primary" type="button" disabled>Detect</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span id="result-pill" class="pill pill-muted">Result</span></div>
+        <div class="result-body">
+          <div id="headline" class="headline">
+            <span id="big" class="big"></span><span id="big-label" class="big-label"></span>
+          </div>
+          <p id="message" class="message">Loading the model&hellip;</p>
+          <div id="bars" class="bars"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card why" id="why" hidden>
+      <h2>Why this answer</h2>
+      <div id="tiles" class="tiles"></div>
+      <p id="clues" class="note"></p>
+      <p id="truth" class="note" hidden></p>
+      <p id="others" class="note" hidden></p>
+    </section>
+
+    <section class="examples">
+      <p class="examples-label">Try a real sentence from our test set (the model never saw these)</p>
+      <div id="chips" class="chips"></div>
+    </section>
+  </main>
+
+  <footer>
+    Prototype for the Veritas AI International High School Hackathon 2026. Trained on example sentences from Taiwan's
+    Ministry of Education Hokkien and Hakka dictionaries and on Tatoeba. Right 94% of the time on test sentences with
+    4 or more characters; weaker on very short texts and on Hakka written in non-standard characters.
+    Runs entirely in your browser: nothing you type is sent anywhere.
+  </footer>
+
+  <script src="mtd.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
